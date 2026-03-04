@@ -7,7 +7,7 @@ use tracing::{error, info};
 use ephemeral_nixos_bot::bot::{BotData, LlmBackendFactory};
 use ephemeral_nixos_bot::llm::anthropic::AnthropicBackend;
 use ephemeral_nixos_bot::llm::LlmBackend;
-use ephemeral_nixos_bot::session::SessionTracker;
+use ephemeral_nixos_bot::session::{RateLimiter, SessionTracker};
 use ephemeral_nixos_bot::vm::VmManager;
 
 struct AnthropicFactory {
@@ -37,6 +37,7 @@ async fn main() {
 
     let vm_manager = Arc::new(VmManager::new(&project_root, &vm_state_dir, &host_cache_url));
     let sessions = Arc::new(SessionTracker::new(Duration::from_secs(30 * 60)));
+    let rate_limiter = Arc::new(RateLimiter::new(2, Duration::from_secs(30)));
     let factory: Arc<dyn LlmBackendFactory> = Arc::new(AnthropicFactory {
         api_key: llm_api_key,
     });
@@ -64,6 +65,7 @@ async fn main() {
     let data = BotData {
         vm_manager,
         sessions,
+        rate_limiter,
         llm_backend_factory: factory,
     };
 

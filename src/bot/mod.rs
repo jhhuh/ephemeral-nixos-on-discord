@@ -3,12 +3,13 @@ pub mod handler;
 
 use std::sync::Arc;
 
-use crate::session::SessionTracker;
+use crate::session::{RateLimiter, SessionTracker};
 use crate::vm::VmManager;
 
 pub struct BotData {
     pub vm_manager: Arc<VmManager>,
     pub sessions: Arc<SessionTracker>,
+    pub rate_limiter: Arc<RateLimiter>,
     pub llm_backend_factory: Arc<dyn LlmBackendFactory>,
 }
 

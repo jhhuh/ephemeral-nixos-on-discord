@@ -29,6 +29,14 @@ pub async fn create(
         return Ok(());
     }
 
+    // Rate limit check
+    let user_id = ctx.author().id.get();
+    let user_active = data.sessions.count_by_user(user_id).await;
+    if let Err(msg) = data.rate_limiter.check(user_id, user_active).await {
+        ctx.say(msg).await?;
+        return Ok(());
+    }
+
     ctx.say("Creating sandbox VM...").await?;
 
     // Generate NixOS config from description if provided
@@ -115,6 +123,7 @@ pub async fn create(
     let session = Session {
         vm_id: vm_id.clone(),
         thread_id,
+        user_id,
         agent,
         qga,
         created_at: std::time::Instant::now(),
@@ -122,6 +131,7 @@ pub async fn create(
     };
 
     data.sessions.add(thread_id, session).await;
+    data.rate_limiter.record(user_id).await;
 
     info!(vm_id = %vm_id, thread_id = %thread_id, "sandbox ready");
 

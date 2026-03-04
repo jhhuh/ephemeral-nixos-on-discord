@@ -10,6 +10,7 @@ use crate::qga::QgaClient;
 pub struct Session {
     pub vm_id: String,
     pub thread_id: u64,
+    pub user_id: u64,
     pub agent: Agent,
     pub qga: QgaClient,
     pub created_at: Instant,
@@ -67,6 +68,10 @@ impl SessionTracker {
 
     pub async fn count(&self) -> usize {
         self.sessions.lock().await.len()
+    }
+
+    pub async fn count_by_user(&self, user_id: u64) -> usize {
+        self.sessions.lock().await.values().filter(|s| s.user_id == user_id).count()
     }
 
     pub async fn sessions_mut(&self) -> MutexGuard<'_, HashMap<u64, Session>> {
