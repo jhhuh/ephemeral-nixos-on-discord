@@ -12,20 +12,27 @@ Every command the agent runs streams to your Discord thread in real-time — you
 /create "Python and PostgreSQL"
 ```
 
-> 🔧 **Running:** `nixos-rebuild switch`
-> ✅ **Output:** `activating the configuration...`
+> :gear: **Rebuilding NixOS:**
+> ```nix
+> { pkgs, ... }: {
+>   environment.systemPackages = [ pkgs.python3 ];
+>   services.postgresql.enable = true;
+> }
+> ```
+> :white_check_mark: nixos-rebuild completed successfully
 >
-> Your sandbox is ready with Python and PostgreSQL installed via NixOS's
-> declarative configuration. The agent explains what it did and why.
+> Your sandbox is ready. The agent used NixOS's declarative config
+> instead of `apt install` — and it'll explain why.
 
 ## Features
 
-- **Live learning** — every command streams to Discord with rich formatting
-- **NixOS tutor** — agent explains concepts, prefers the declarative "NixOS way"
-- **Ephemeral VMs** — fresh NixOS QEMU VMs via [microvm.nix](https://github.com/astro/microvm.nix), destroyed on timeout
-- **LLM-driven** — pluggable backends (Anthropic, OpenAI, Ollama)
-- **Natural language config** — describe what you want, LLM generates NixOS config
-- **Secure** — QEMU hardware isolation, SLIRP networking, per-user rate limiting
+- **Live learning** — every command streams to Discord as it runs
+- **NixOS tutor** — explains concepts, prefers declarative config, teaches by showing
+- **Break things safely** — VMs are ephemeral, destructive commands welcome
+- **Nix language** — interactive learning with `nix eval` and `nix repl`
+- **3 LLM backends** — Anthropic, OpenAI, Ollama (local)
+- **Natural language config** — describe what you want, LLM generates NixOS modules
+- **Secure** — QEMU hardware isolation, SLIRP networking, rate limiting
 - **NixOS module** — deploy with `services.nixos-sandbox.enable = true`
 
 ## Quick Start

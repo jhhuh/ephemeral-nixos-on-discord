@@ -87,10 +87,13 @@ When the agent runs tools, you see every action **live** in the thread:
 
 The agent acts as a NixOS tutor:
 
-- **Before running commands** — briefly explains what it's about to do and why
-- **NixOS concepts** — naturally introduces declarative config, generations, the Nix store, flakes
-- **NixOS way first** — prefers `nixos-rebuild` over imperative installs, explains the difference
-- **Encourages experimentation** — the VM is ephemeral, so breaking things is fine
+- **Before acting** — briefly explains what it'll do and why (1-2 sentences)
+- **NixOS way first** — uses `nixos_rebuild` for config changes, redirects `apt`/`yum` users to the NixOS equivalent immediately (without running the failing command)
+- **Conceptual questions** — answers concisely, then offers to demonstrate live
+- **Multi-step demos** — for rollbacks, generations, flakes: walks through the full process step by step
+- **Nix language learning** — writes `.nix` files and evaluates them with `nix eval` or `nix repl` interactively
+- **Destructive commands** — warns what will happen, reminds it's ephemeral, then executes. Never refuses.
+- **Tool selection** — prefers `nixos_rebuild` for config, `read_file` for viewing files, `exec` for shell commands, `write_file` for scripts/exercises
 
 ### Example
 

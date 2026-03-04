@@ -61,7 +61,14 @@ A tool-use agent loop with **real-time streaming** to Discord:
 
 The agent emits `AgentEvent`s during execution: `ToolStart` (command about to run), `ToolOutput` (result), and `Reply` (final text). The handler formats these with Discord markdown and posts each one immediately, so users see commands executing live.
 
-**NixOS tutor personality:** The system prompt instructs the LLM to act as a NixOS teacher — explain what each command does, introduce NixOS concepts naturally, prefer declarative configuration, and encourage experimentation.
+**NixOS tutor personality:** The system prompt was refined through scenario-based evaluation (8 user personas: beginner, imperative Linux user, destructive tester, rollback learner, Nix language student, etc.). Key behaviors:
+
+- Prefers `nixos_rebuild` tool for all config changes (not `write_file` + `exec`)
+- Redirects `apt`/`yum` users immediately — never runs commands known to fail
+- Allows destructive commands (this is a sandbox) — warns, explains, then executes
+- Offers live demos for conceptual questions
+- Walks through multi-step processes (rollbacks, generations) step by step
+- Teaches Nix language interactively via `write_file` + `nix eval`
 
 **Pluggable backends:** `LlmBackend` trait with Anthropic, OpenAI, and Ollama implementations.
 

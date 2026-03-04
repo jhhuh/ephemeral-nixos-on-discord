@@ -22,28 +22,41 @@ Discord thread  →  Poise bot  →  LLM agent loop  →  QGA client  →  QEMU 
 
 > **You:** install htop and show me system info
 >
-> **Bot:** I'll install htop using the NixOS way — adding it to the system configuration rather than installing imperatively.
+> **Bot:** I'll add htop to the system configuration the NixOS way — declaratively through `environment.systemPackages`, then rebuild.
 >
-> 🔧 **Running:**
-> ```bash
-> nix-env -iA nixpkgs.htop
+> :gear: **Rebuilding NixOS:**
+> ```nix
+> { pkgs, ... }: { environment.systemPackages = [ pkgs.htop ]; }
 > ```
-> ✅ **Output:**
+> Then running `nixos-rebuild switch`
+>
+> :white_check_mark: **Output:**
 > ```
-> installing 'htop-3.3.0'
+> building the system configuration...
+> activating the configuration...
+> nixos-rebuild completed successfully
 > ```
 >
-> 🔧 **Running:**
+> :wrench: **Running:**
 > ```bash
 > htop --version && uname -a
 > ```
-> ✅ **Output:**
+> :white_check_mark: **Output:**
 > ```
 > htop 3.3.0
 > Linux sandbox-a1b2c3d4 6.6.x #1 SMP NixOS x86_64 GNU/Linux
 > ```
 >
-> htop is installed! I used `nix-env -iA` for a quick imperative install. On NixOS, the **declarative way** would be adding `pkgs.htop` to `environment.systemPackages` in your configuration and running `nixos-rebuild switch`. Want me to show you how?
+> htop is now installed! Notice we didn't use `apt install` or `nix-env` — we declared the package in the NixOS configuration and rebuilt. This is the **declarative approach**: your system state is defined by config, not by a sequence of install commands. Want to try adding a service like PostgreSQL next?
+
+## What You Can Learn
+
+- **Declarative configuration** — add packages and services through NixOS modules, not imperative commands
+- **Generations and rollbacks** — watch the agent demonstrate how NixOS tracks system versions
+- **The Nix store** — see how `/nix/store` works, why paths are hashed, how closure works
+- **Nix language** — write and evaluate Nix expressions interactively with `nix eval` and `nix repl`
+- **Service management** — enable services like nginx, PostgreSQL, Redis through `services.*.enable`
+- **Break things safely** — delete `/nix/store`, `rm -rf /`, stop systemd — the VM is disposable
 
 ## Features
 
