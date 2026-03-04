@@ -10,7 +10,7 @@
   };
 
   outputs = { self, nixpkgs, crane, flake-utils, microvm, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+    (flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
         craneLib = crane.mkLib pkgs;
@@ -46,5 +46,8 @@
           RUST_LOG = "debug";
         };
       }
-    );
+    ))
+    // {
+      nixosModules.default = import ./nix/host.nix;
+    };
 }
