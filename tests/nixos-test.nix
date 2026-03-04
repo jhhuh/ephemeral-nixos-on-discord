@@ -14,7 +14,14 @@ pkgs.testers.nixosTest {
       enable = true;
       stateDir = "/var/lib/nixos-sandbox";
       hostCachePort = 5557;
+      # Dummy values — test only checks infrastructure, not the bot service
+      package = pkgs.hello;  # placeholder
+      discordTokenFile = builtins.toFile "token" "dummy";
+      llmApiKeyFile = builtins.toFile "key" "dummy";
+      projectRoot = ./.;
     };
+    # Disable the bot service itself (we're only testing infra)
+    systemd.services.nixos-sandbox-bot.enable = false;
 
     # Enable bridge networking
     services.nixos-sandbox.networking.bridge = {

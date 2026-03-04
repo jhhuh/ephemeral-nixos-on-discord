@@ -9,8 +9,19 @@
 - Wired into `/create` command: if user provides a description, it generates config via LLM, validates syntax with `nix-instantiate --parse` (via `spawn_blocking` since `validate_nix_syntax` is synchronous), and passes to `VmManager::create`. Falls back to base config on LLM error or syntax failure.
 - Updated slash command description param from "reserved for future use" to actionable hint.
 
-## 2026-03-04: Comprehensive NixOS infrastructure integration test
-- Expanded `tests/nixos-test.nix` from a minimal nix-serve smoke test to a full host infrastructure test.
-- Now validates: nix-serve cache, sandbox-runner user, state directory, KVM device, bridge interface, nftables rules, dnsmasq, and cache-info content.
-- Imports `nix/networking/bridge.nix` alongside `nix/host.nix` so bridge/nftables/dnsmasq are exercised.
-- Full microVM boot inside the test was deferred (nested virt complexity); test focuses on host-side infrastructure instead.
+## 2026-03-04: Full implementation complete and merged
+- **Phase 1 (Foundation):** QGA protocol types, socket client with mock tests, VM config generator, VM manager
+- **Phase 2 (Intelligence):** LlmBackend trait, Anthropic/OpenAI/Ollama backends, agent tool-use loop
+- **Phase 3 (Integration):** Session tracker, Discord bot (poise), host NixOS module, nixosTest
+- **Post-MVP:** Natural language config gen, /download command, bridge + veth networking, rate limiting
+- 22 commits, 20 tests, 6128 lines across 37 files
+- Merged to master, pushed to github.com/jhhuh/ephemeral-nixos-on-discord
+
+### Known gaps for real deployment
+- No actual end-to-end test with a running Discord bot + real VM
+- LLM config generation untested with real API (needs LLM_API_KEY)
+- nixosTest requires Linux host with KVM
+- `nix build` of a microvm flake not tested (needs microvm.nix eval)
+- No systemd service unit for the bot itself
+- No TLS/auth on nix-serve (currently localhost-only, which is fine for SLIRP but not bridge)
+- No persistent storage for session state across bot restarts

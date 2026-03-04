@@ -6,6 +6,8 @@ use tracing::{error, info};
 
 use ephemeral_nixos_bot::bot::{BotData, LlmBackendFactory};
 use ephemeral_nixos_bot::llm::anthropic::AnthropicBackend;
+use ephemeral_nixos_bot::llm::ollama::OllamaBackend;
+use ephemeral_nixos_bot::llm::openai::OpenAiBackend;
 use ephemeral_nixos_bot::llm::LlmBackend;
 use ephemeral_nixos_bot::session::{RateLimiter, SessionTracker};
 use ephemeral_nixos_bot::vm::VmManager;
@@ -20,14 +22,41 @@ impl LlmBackendFactory for AnthropicFactory {
     }
 }
 
+struct OpenAiFactory {
+    api_key: String,
+    api_base: Option<String>,
+}
+
+impl LlmBackendFactory for OpenAiFactory {
+    fn create(&self) -> Box<dyn LlmBackend> {
+        Box::new(OpenAiBackend::new(
+            self.api_key.clone(),
+            None,
+            self.api_base.clone(),
+        ))
+    }
+}
+
+struct OllamaFactory {
+    base_url: Option<String>,
+    model: Option<String>,
+}
+
+impl LlmBackendFactory for OllamaFactory {
+    fn create(&self) -> Box<dyn LlmBackend> {
+        Box::new(OllamaBackend::new(self.model.clone(), self.base_url.clone()))
+    }
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
     let discord_token =
         std::env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN env var required");
-    let llm_api_key =
-        std::env::var("LLM_API_KEY").expect("LLM_API_KEY env var required");
+    let llm_backend =
+        std::env::var("LLM_BACKEND").unwrap_or_else(|_| "anthropic".into());
+    let llm_api_key = std::env::var("LLM_API_KEY").ok();
     let vm_state_dir =
         std::env::var("VM_STATE_DIR").unwrap_or_else(|_| "/tmp/ephemeral-vms".into());
     let host_cache_url =
@@ -38,9 +67,22 @@ async fn main() {
     let vm_manager = Arc::new(VmManager::new(&project_root, &vm_state_dir, &host_cache_url));
     let sessions = Arc::new(SessionTracker::new(Duration::from_secs(30 * 60)));
     let rate_limiter = Arc::new(RateLimiter::new(2, Duration::from_secs(30)));
-    let factory: Arc<dyn LlmBackendFactory> = Arc::new(AnthropicFactory {
-        api_key: llm_api_key,
-    });
+
+    let factory: Arc<dyn LlmBackendFactory> = match llm_backend.as_str() {
+        "openai" => Arc::new(OpenAiFactory {
+            api_key: llm_api_key.expect("LLM_API_KEY required for openai backend"),
+            api_base: std::env::var("OPENAI_API_BASE").ok(),
+        }),
+        "ollama" => Arc::new(OllamaFactory {
+            base_url: std::env::var("OLLAMA_BASE_URL").ok(),
+            model: std::env::var("OLLAMA_MODEL").ok(),
+        }),
+        _ => Arc::new(AnthropicFactory {
+            api_key: llm_api_key.expect("LLM_API_KEY required for anthropic backend"),
+        }),
+    };
+
+    info!(backend = %llm_backend, "using LLM backend");
 
     // Spawn idle timeout reaper
     {
