@@ -51,13 +51,17 @@ No SSH needed. The QGA socket is a host-side Unix socket created by QEMU, so the
 
 ### LLM Agent (`src/llm/`)
 
-A tool-use agent loop:
+A tool-use agent loop with **real-time streaming** to Discord:
 
 1. Receive user message from Discord thread
 2. Send to LLM with tool definitions (exec, read_file, write_file, nixos_rebuild)
-3. LLM returns tool calls → execute via QGA → return results
+3. LLM returns tool calls → **stream "Running..." to Discord** → execute via QGA → **stream output to Discord**
 4. Repeat until LLM produces a text response
-5. Post response to Discord
+5. Post final response to Discord
+
+The agent emits `AgentEvent`s during execution: `ToolStart` (command about to run), `ToolOutput` (result), and `Reply` (final text). The handler formats these with Discord markdown and posts each one immediately, so users see commands executing live.
+
+**NixOS tutor personality:** The system prompt instructs the LLM to act as a NixOS teacher — explain what each command does, introduce NixOS concepts naturally, prefer declarative configuration, and encourage experimentation.
 
 **Pluggable backends:** `LlmBackend` trait with Anthropic, OpenAI, and Ollama implementations.
 

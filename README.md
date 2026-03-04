@@ -1,18 +1,31 @@
 # Ephemeral NixOS on Discord
 
-A Discord bot that launches ephemeral NixOS sandbox VMs with LLM agent interaction.
+**Learn NixOS by doing.** A Discord bot that launches ephemeral NixOS sandbox VMs with an LLM agent that teaches you NixOS interactively.
 
-Each sandbox is a QEMU virtual machine managed by [microvm.nix](https://github.com/astro/microvm.nix), controlled via the QEMU Guest Agent protocol. Users chat in a dedicated Discord thread while an LLM agent executes commands, reads/writes files, and applies NixOS config changes inside the VM.
+Every command the agent runs streams to your Discord thread in real-time — you watch it work, learn the NixOS way, and experiment freely in a disposable VM.
 
 **[Documentation](https://jhhuh.github.io/ephemeral-nixos-on-discord)**
 
+## How It Works
+
+```
+/create "Python and PostgreSQL"
+```
+
+> 🔧 **Running:** `nixos-rebuild switch`
+> ✅ **Output:** `activating the configuration...`
+>
+> Your sandbox is ready with Python and PostgreSQL installed via NixOS's
+> declarative configuration. The agent explains what it did and why.
+
 ## Features
 
-- **Ephemeral VMs** — fresh NixOS QEMU VMs, auto-destroyed on idle timeout
-- **LLM-driven** — pluggable backends (Anthropic, OpenAI, Ollama) with tool-use agent loop
-- **Natural language config** — `/create "Python 3.12 and PostgreSQL"` generates NixOS config via LLM
-- **Secure isolation** — QEMU hardware boundary, SLIRP networking, per-user rate limiting
-- **File transfer** — `/download /path/to/file` retrieves files from the sandbox
+- **Live learning** — every command streams to Discord with rich formatting
+- **NixOS tutor** — agent explains concepts, prefers the declarative "NixOS way"
+- **Ephemeral VMs** — fresh NixOS QEMU VMs via [microvm.nix](https://github.com/astro/microvm.nix), destroyed on timeout
+- **LLM-driven** — pluggable backends (Anthropic, OpenAI, Ollama)
+- **Natural language config** — describe what you want, LLM generates NixOS config
+- **Secure** — QEMU hardware isolation, SLIRP networking, per-user rate limiting
 - **NixOS module** — deploy with `services.nixos-sandbox.enable = true`
 
 ## Quick Start
@@ -26,12 +39,6 @@ export LLM_API_KEY="your-api-key"
 nix develop -c cargo run
 ```
 
-## Architecture
-
-```
-Discord thread  →  Poise bot  →  LLM agent loop  →  QGA client  →  QEMU VM (microvm.nix)
-```
-
 ## Commands
 
 | Command | Description |
@@ -40,6 +47,15 @@ Discord thread  →  Poise bot  →  LLM agent loop  →  QGA client  →  QEMU 
 | `/destroy` | Destroy the sandbox in current thread |
 | `/status` | Show VM uptime and idle time |
 | `/download <path>` | Download a file from the sandbox |
+
+## Architecture
+
+```
+Discord thread  →  Poise bot  →  LLM agent loop  →  QGA client  →  QEMU VM (microvm.nix)
+                                     ↓
+                              streams every command
+                              and output to Discord
+```
 
 ## License
 
