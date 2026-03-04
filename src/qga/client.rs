@@ -21,8 +21,6 @@ pub enum QgaError {
     Qga { class: String, desc: String },
     #[error("Command timed out")]
     Timeout,
-    #[error("Command failed with exit code {code}: {stderr}")]
-    ExecFailed { code: i32, stderr: String },
 }
 
 #[derive(Debug)]
@@ -145,13 +143,6 @@ impl QgaClient {
                 let exit_code = status.exitcode.unwrap_or(-1);
                 let stdout = decode_base64_opt(status.out_data.as_deref())?;
                 let stderr = decode_base64_opt(status.err_data.as_deref())?;
-
-                if exit_code != 0 {
-                    return Err(QgaError::ExecFailed {
-                        code: exit_code,
-                        stderr: stderr.clone(),
-                    });
-                }
 
                 return Ok(ExecOutput {
                     exit_code,

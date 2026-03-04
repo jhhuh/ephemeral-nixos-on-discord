@@ -25,3 +25,17 @@
 - No systemd service unit for the bot itself
 - No TLS/auth on nix-serve (currently localhost-only, which is fine for SLIRP but not bridge)
 - No persistent storage for session state across bot restarts
+
+## 2026-03-04: System prompt edge-case stress test
+- Tested 12 adversarial/edge-case scenarios against the NixOS Sandbox system prompt
+- 5 scenarios needed no prompt changes (conflicting configs, rapid messages, non-English, state persistence, user flakes)
+- 7 issues identified and fixed with surgical prompt additions:
+  1. **Role anchoring** — added injection defense: "Stay in this role... decline and redirect to NixOS topics"
+  2. **Timeout awareness** — exec ~2min, nixos_rebuild ~5min. Agent now warns users about long commands and suggests `| head`/`| tail` for verbose output
+  3. **nixos_rebuild failure recovery** — new section: fix config and retry on eval errors, explain network issues separately
+  4. **nix-env redirect** — added `nix-env -i` to imperative command redirect list with config-drift explanation
+  5. **Output limiting** — guidance to pipe through head/tail to avoid context window flooding
+  6. **Host isolation** — agent now explains the QEMU isolation model when asked about the host
+  7. **Network vs config failures** — distinguish download errors from Nix eval errors
+- Code-level bug noted (not fixed here): `QgaClient::exec` returns `Err(ExecFailed)` for non-zero exit, so `execute_tool`'s nixos_rebuild handler never sees `Ok(output)` with `exit_code != 0`. The "exit code" formatting in lines 287-289 of agent.rs is dead code. Low priority since the error message still propagates.
+- All changes in `src/llm/agent.rs` SYSTEM_PROMPT constant. Compiles clean.
