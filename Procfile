@@ -1,0 +1,1 @@
+bot: cargo run
