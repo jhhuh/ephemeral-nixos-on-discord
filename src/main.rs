@@ -73,6 +73,7 @@ async fn main() {
                 ephemeral_nixos_bot::bot::commands::create(),
                 ephemeral_nixos_bot::bot::commands::destroy(),
                 ephemeral_nixos_bot::bot::commands::status(),
+                ephemeral_nixos_bot::bot::commands::download(),
             ],
             event_handler: |ctx, event, _framework, data| {
                 Box::pin(async move {

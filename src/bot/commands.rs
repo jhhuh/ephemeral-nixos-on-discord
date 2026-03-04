@@ -131,6 +131,55 @@ pub async fn destroy(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+/// Download a file from the sandbox VM.
+#[poise::command(slash_command)]
+pub async fn download(
+    ctx: Context<'_>,
+    #[description = "Path to the file in the sandbox"] path: String,
+) -> Result<(), Error> {
+    let data = ctx.data();
+    let thread_id = ctx.channel_id().get();
+
+    // Get file data from QGA
+    let file_data = {
+        let mut sessions = data.sessions.sessions_mut().await;
+        let session = match sessions.get_mut(&thread_id) {
+            Some(s) => s,
+            None => {
+                ctx.say("No sandbox in this thread.").await?;
+                return Ok(());
+            }
+        };
+        session.last_activity = std::time::Instant::now();
+
+        match session.qga.read_file(&path).await {
+            Ok(data) => data,
+            Err(e) => {
+                ctx.say(format!("Failed to read file: {e}")).await?;
+                return Ok(());
+            }
+        }
+    };
+
+    // Check file size (Discord limit: 25MB for free, 50MB for boosted)
+    if file_data.len() > 25 * 1024 * 1024 {
+        ctx.say("File is too large for Discord (>25MB).").await?;
+        return Ok(());
+    }
+
+    // Extract filename from path
+    let filename = path.rsplit('/').next().unwrap_or("file");
+
+    // Upload as attachment
+    let attachment = serenity::CreateAttachment::bytes(file_data, filename);
+    let reply = poise::CreateReply::default()
+        .attachment(attachment)
+        .content(format!("Downloaded `{path}`"));
+
+    ctx.send(reply).await?;
+    Ok(())
+}
+
 /// Show status of the sandbox in the current thread.
 #[poise::command(slash_command)]
 pub async fn status(ctx: Context<'_>) -> Result<(), Error> {
