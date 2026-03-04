@@ -1,0 +1,50 @@
+site_name: Ephemeral NixOS on Discord
+site_url: https://jhhuh.github.io/ephemeral-nixos-on-discord
+repo_url: https://github.com/jhhuh/ephemeral-nixos-on-discord
+repo_name: jhhuh/ephemeral-nixos-on-discord
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.expand
+    - toc.integrate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Architecture: architecture.md
+  - Discord Commands: commands.md
+  - LLM Backends: llm-backends.md
+  - Networking: networking.md
+  - NixOS Module: nixos-module.md
+  - Development:
+      - Design Document: plans/2026-03-04-ephemeral-nixos-discord-bot-design.md
+      - Implementation Plan: plans/2026-03-04-implementation-plan.md
