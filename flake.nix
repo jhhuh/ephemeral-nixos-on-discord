@@ -46,6 +46,9 @@
           RUST_LOG = "debug";
         };
       }
+      // (if pkgs.stdenv.isLinux then {
+        checks.smoke-test = import ./tests/nixos-test.nix { inherit pkgs; };
+      } else {})
     ))
     // {
       nixosModules.default = import ./nix/host.nix;
