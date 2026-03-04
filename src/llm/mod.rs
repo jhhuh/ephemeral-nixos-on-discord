@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod anthropic;
+pub mod config_gen;
 pub mod ollama;
 pub mod openai;
 pub mod tools;

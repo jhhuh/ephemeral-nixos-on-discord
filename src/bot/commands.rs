@@ -17,9 +17,8 @@ const MAX_SESSIONS: usize = 10;
 #[poise::command(slash_command)]
 pub async fn create(
     ctx: Context<'_>,
-    #[description = "Optional VM description (reserved for future use)"] description: Option<
-        String,
-    >,
+    #[description = "Describe what you want installed (e.g. 'Python 3.12 and PostgreSQL')"]
+    description: Option<String>,
 ) -> Result<(), Error> {
     let data = ctx.data();
 
@@ -32,9 +31,43 @@ pub async fn create(
 
     ctx.say("Creating sandbox VM...").await?;
 
-    // Create VM (description reserved for future config-from-description)
-    let _ = description;
-    let vm_id = match data.vm_manager.create(None).await {
+    // Generate NixOS config from description if provided
+    let user_config = if let Some(ref desc) = description {
+        ctx.say(format!("Generating NixOS config from: *{}*", desc))
+            .await?;
+        let backend = data.llm_backend_factory.create();
+        match crate::llm::config_gen::generate_nixos_config(desc, backend.as_ref()).await {
+            Ok(config) => {
+                let config_clone = config.clone();
+                let syntax_check = tokio::task::spawn_blocking(move || {
+                    crate::vm::config::validate_nix_syntax(&config_clone)
+                })
+                .await
+                .map_err(|e| -> Error { format!("spawn_blocking: {e}").into() })?;
+                match syntax_check {
+                    Ok(()) => Some(config),
+                    Err(e) => {
+                        ctx.say(format!(
+                            "Generated config has syntax errors: {e}\nFalling back to base config."
+                        ))
+                        .await?;
+                        None
+                    }
+                }
+            }
+            Err(e) => {
+                ctx.say(format!(
+                    "Config generation failed: {e}\nFalling back to base config."
+                ))
+                .await?;
+                None
+            }
+        }
+    } else {
+        None
+    };
+
+    let vm_id = match data.vm_manager.create(user_config).await {
         Ok(id) => id,
         Err(e) => {
             error!(error = %e, "failed to create VM");
